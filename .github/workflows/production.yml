@@ -1,4 +1,4 @@
-name: Apokrat backend production pipeline
+name: Apokrat backend production
 on:
   pull_request:
     branches: [ "master" ]
