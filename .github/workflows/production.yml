@@ -34,6 +34,7 @@ jobs:
             type=sha,prefix=sha-
             type=semver,pattern={{version}}
 
+
       - name: Build args from Vault
         id: vault
         shell: bash
