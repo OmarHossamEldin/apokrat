@@ -1,9 +1,5 @@
 #!/bin/bash
 
-envsubst < /var/www/.env.example > /var/www/.env
-
-composer install --no-scripts
-
 composer run-script post-autoload-dump
 
 chmod -R 777 storage bootstrap/cache

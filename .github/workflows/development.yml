@@ -1,12 +1,12 @@
-name: Apokrat backend production pipeline
+name: Apokrat backend development
 on:
   pull_request:
-    branches: [ "master" ]
+    branches: [ "development" ]
     types: [ "closed" ]
   push:
     tags: [ "v*.*.*" ]
 jobs:
-  build-and-push:
+  release:
     runs-on: ubuntu-latest
     steps:
       - name: access-code-base-from-repo
@@ -27,7 +27,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ secrets.DOCKERHUB_PRODUCTION_REPO }}
+          images: ${{ secrets.DOCKERHUB_DEVELOPMENT_REPO }}
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
             type=ref,event=branch
