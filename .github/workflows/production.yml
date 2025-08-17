@@ -100,7 +100,7 @@ jobs:
             docker run -d \
               --name "apokrat-backend" \
               --restart unless-stopped \
-              -p "8000" \
+              -p "8000:8000" \
               "$IMAGE"
 
             docker image prune -f
