@@ -47,27 +47,19 @@ jobs:
             -H "X-Vault-Token: ${{ secrets.VAULT_TOKEN }}" \
             "https://secrets.apokrat.com/v1/kv/${{ secrets.VAULT_PATH }}")"
 
-            # mask values (avoid leaking to logs)
-            echo "$SECRET_JSON" | jq -r '.data.data[]' | while read -r v; do
-            [ -n "$v" ] && echo "::add-mask::$v"
+            jq -e '.data.data' >/dev/null <<<"$SECRET_JSON"
+
+            # Mask values (avoid leaking to logs)
+            jq -r '.data.data[]? | tostring' <<<"$SECRET_JSON" | while read -r v; do
+            [[ -n "$v" ]] && echo "::add-mask::$v"
             done
 
-            BUILD_ARGS="$(echo "$SECRET_JSON" \
-            | jq -r '.data.data | to_entries | map("\(.key)=\(.value|tostring)") | join("\n)")"
+            mapfile -t ARG_LINES < <(jq -r '.data.data | to_entries[] | "\(.key)=\(.value|tostring)"' <<<"$SECRET_JSON")
 
             {
-            echo "build_args<<EOF"
-            echo "$BUILD_ARGS"
-            echo "EOF"
-            } >> "$GITHUB_OUTPUT"
-
-            BUILD_ARGS="$(echo "$SECRET_JSON" \
-              | jq -r '.data.data | to_entries | map("\(.key)=\(.value|tostring)") | join("\n)")"
-
-            {
-              echo "build_args<<EOF"
-              echo "$BUILD_ARGS"
-              echo "EOF"
+              echo 'build_args<<EOF'
+              printf '%s\n' "${ARG_LINES[@]}"
+              echo 'EOF'
             } >> "$GITHUB_OUTPUT"
 
       - name: Build & Push
