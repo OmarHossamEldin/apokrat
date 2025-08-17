@@ -44,8 +44,8 @@ jobs:
             sudo apt-get install -y jq >/dev/null
 
             SECRET_JSON="$(curl -fsSL \
-              -H "X-Vault-Token: ${{ secrets.VAULT_TOKEN }}" \
-              "https://secrets.apokrat.com/v1/kv/${{ secrets.VAULT_PATH }}")"
+              -H "X-Vault-Token: '${{ secrets.VAULT_TOKEN }}'" \
+              "https://secrets.apokrat.com/v1/kv/'${{ secrets.VAULT_PATH }}'")"
 
             echo "$SECRET_JSON" | jq -r '.data.data[]' | while read -r v; do
               [ -n "$v" ] && echo "::add-mask::$v"
