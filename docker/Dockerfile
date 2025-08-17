@@ -148,13 +148,11 @@ RUN npm install
 
 COPY composer.json composer.lock ./
 
-RUN envsubst < /var/www/.env.example > /var/www/.env
-
-
-RUN composer install --no-scripts
-
 COPY . .
 
+RUN envsubst < /var/www/.env.example > /var/www/.env
+
+RUN composer install --no-scripts
 
 EXPOSE ${HTTP_PORT} ${REVERB_PORT}
 
