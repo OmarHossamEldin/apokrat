@@ -76,12 +76,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-#      - name: Running tests
-#        uses: appleboy/ssh-action@v1.1.0
-#        # to run testing with we write unit test
-
       - name: Deploying to VPS
-        if: startsWith(github.ref, 'refs/tags/')
         uses: appleboy/ssh-action@v1.1.0
         with:
           host: ${{ secrets.VPS_HOST }}
