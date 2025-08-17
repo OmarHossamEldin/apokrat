@@ -6,7 +6,7 @@ on:
   push:
     tags: [ "v*.*.*" ]
 jobs:
-  build-and-push:
+  release:
     runs-on: ubuntu-latest
     steps:
       - name: access-code-base-from-repo
@@ -34,6 +34,31 @@ jobs:
             type=sha,prefix=sha-
             type=semver,pattern={{version}}
 
+      - name: Build args from Vault
+        id: vault
+        shell: bash
+        run: |
+            set -euo pipefail
+            sudo apt-get update -y >/dev/null
+            sudo apt-get install -y jq >/dev/null
+
+            SECRET_JSON="$(curl -fsSL \
+              -H "X-Vault-Token: ${{ secrets.VAULT_TOKEN }}" \
+              "https://secrets.apokrat.com/v1/kv/${{ secrets.VAULT_PATH }}")"
+
+            echo "$SECRET_JSON" | jq -r '.data.data[]' | while read -r v; do
+              [ -n "$v" ] && echo "::add-mask::$v"
+            done
+
+            BUILD_ARGS="$(echo "$SECRET_JSON" \
+              | jq -r '.data.data | to_entries | map("\(.key)=\(.value|tostring)") | join("\n)")"
+
+            {
+              echo "build_args<<EOF"
+              echo "$BUILD_ARGS"
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+
       - name: Build & Push
         uses: docker/build-push-action@v6
         with:
@@ -43,6 +68,8 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            ${{ steps.vault.outputs.build_args }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -50,6 +77,12 @@ jobs:
         uses: docker/build-push-action@v6
         # to run testing with we write unit test
 
-      - name: Deploying
-        uses: docker/build-push-action@v6
+      - name: Deploying to VPS
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: '22'
 

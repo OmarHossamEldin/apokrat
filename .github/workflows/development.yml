@@ -6,7 +6,7 @@ on:
   push:
     tags: [ "v*.*.*" ]
 jobs:
-  build-and-push:
+  release:
     runs-on: ubuntu-latest
     steps:
       - name: access-code-base-from-repo
